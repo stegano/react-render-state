@@ -1,4 +1,13 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   Status,
   RenderIdle,
@@ -6,21 +15,61 @@ import {
   RenderLoading,
   RenderError,
 } from "./use-render-state.interface";
+import { RenderStateContext } from "../providers";
 
-const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) => {
+/**
+ * useRenderState
+ */
+const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error, key?: string) => {
+  const currentKey = key ?? useId();
+  const reenderStateContext = useContext(RenderStateContext);
+  const store = useMemo(() => reenderStateContext.getStore(), [reenderStateContext]);
+  const externalStore = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const externalStoreItem = useMemo(() => externalStore[currentKey], [currentKey, externalStore]);
   const previousDataRef = useRef<Data>(undefined);
   const previousErrorRef = useRef<Error>(undefined);
-  const currentDataRef = useRef<Data | undefined>(initialData);
-  const currentErrorRef = useRef<Error | undefined>(initialError);
+  const currentDataRef = useRef<Data | undefined>(externalStoreItem?.initialData ?? initialData);
+  const currentErrorRef = useRef<Error | undefined>(
+    externalStoreItem?.initialError ?? initialError,
+  );
   const [status, setStatus] = useState<Status>(() => {
-    if (initialData !== undefined) {
+    if ((externalStoreItem?.initialData ?? initialData) !== undefined) {
       return Status.Success;
     }
-    if (initialError !== undefined) {
+    if ((externalStoreItem?.initialError ?? initialError) !== undefined) {
       return Status.Error;
     }
     return Status.Idle;
   });
+
+  useEffect(() => {
+    /**
+     * Set initial data and error when the component is mounted.
+     */
+    store.set(
+      currentKey,
+      {
+        status: Status.Idle,
+        initialData: currentDataRef.current,
+        initialError: currentErrorRef.current,
+      },
+      true,
+    );
+  }, [currentKey, store]);
+
+  useEffect(() => {
+    /**
+     * Update component state when the external store item is updated.
+     */
+    if (externalStoreItem) {
+      const { currentData, currentError, previousData, previousError } = externalStoreItem;
+      currentDataRef.current = currentData;
+      currentErrorRef.current = currentError;
+      previousDataRef.current = previousData;
+      previousErrorRef.current = previousError;
+      setStatus(externalStoreItem.status);
+    }
+  }, [externalStoreItem]);
 
   /**
    * handleData
@@ -28,32 +77,41 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
   const handleData = useCallback(
     async (processFn: (prevData?: Data, prevError?: Error) => Promise<Data> | Data) => {
       try {
-        previousErrorRef.current = currentErrorRef.current;
-        currentErrorRef.current = undefined;
-        previousDataRef.current = currentDataRef.current;
-        currentDataRef.current = undefined;
-        setStatus(Status.Loading);
+        store.set(currentKey, {
+          status: Status.Loading,
+          currentData: undefined,
+          previousData: currentDataRef.current,
+          currentError: undefined,
+          previousError: currentErrorRef.current,
+        });
         const data = await processFn(previousDataRef.current, previousErrorRef.current);
-        currentDataRef.current = data;
-        setStatus(Status.Success);
+        store.set(currentKey, {
+          status: Status.Success,
+          currentData: data,
+        });
       } catch (error) {
-        currentErrorRef.current = error as Error;
-        setStatus(Status.Error);
+        store.set(currentKey, {
+          status: Status.Error,
+          currentError: error as Error,
+        });
+        throw error;
       }
     },
-    [],
+    [currentKey, store],
   );
 
   /**
    * resetData
    */
   const resetData = useCallback(() => {
-    previousDataRef.current = currentDataRef.current;
-    previousErrorRef.current = currentErrorRef.current;
-    currentDataRef.current = undefined;
-    currentErrorRef.current = undefined;
-    setStatus(Status.Idle);
-  }, []);
+    store.set(currentKey, {
+      status: Status.Idle,
+      currentData: undefined,
+      previousData: currentDataRef.current,
+      currentError: undefined,
+      previousError: currentErrorRef.current,
+    });
+  }, [currentKey, store]);
 
   /**
    * render
@@ -98,7 +156,7 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
         }
         default: {
           // eslint-disable-next-line no-console
-          console.warn("No data found");
+          console.warn(`Unknown status(${status})`);
           return null;
         }
       }
@@ -113,22 +171,46 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
   const manipulation = useMemo(() => {
     return {
       setStatus: (value: Status) => {
-        setStatus(value);
+        store.set(currentKey, { status: value });
       },
       setPreviousDataWithoutStatus: (data?: Data) => {
-        previousDataRef.current = data;
+        store.set(
+          currentKey,
+          {
+            previousData: data,
+          },
+          true,
+        );
       },
       setPreviousErrorWithoutStatus: (error?: Error) => {
-        previousErrorRef.current = error;
+        store.set(
+          currentKey,
+          {
+            previousError: error,
+          },
+          true,
+        );
       },
       setCurrentDataWithoutStatus: (data?: Data) => {
-        currentDataRef.current = data;
+        store.set(
+          currentKey,
+          {
+            currentData: data,
+          },
+          true,
+        );
       },
       setCurrentErrorWithoutStatus: (error?: Error) => {
-        currentErrorRef.current = error;
+        store.set(
+          currentKey,
+          {
+            currentError: error,
+          },
+          true,
+        );
       },
     };
-  }, []);
+  }, [currentKey, store]);
 
   return [
     render,
@@ -137,6 +219,8 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
     status,
     currentDataRef.current,
     currentErrorRef.current,
+    previousDataRef.current,
+    previousErrorRef.current,
     manipulation,
   ] as const;
 };

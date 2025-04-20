@@ -36,14 +36,71 @@ export const App = () => {
   }, [handleData]);
 
   return render(
-    (data) => <div>Completed({data})</div>,
+    (data) => <div>Success({data})</div>,           // → renderSuccess
+    () => <p>Idle</p>,                              // → renderIdle
+    () => <p>Loading..</p>,                         // → renderLoading
+    (error) => <p>Error. :(, ({error.message})</p>  // → renderError
+  );
+};
+```
+Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
+
+### Data Sharing for Rendering
+ 
+Without state management libraries like Redux, it is possible to share data and rendering state among multiple containers(components).
+
+```tsx
+import { useCallback, useEffect } from 'react';
+import { useRenderState } from 'react-render-state';
+
+const sharingKey = 'sharingKey';
+
+export const ComponentA = () => {
+  const [render, handleData] = useRenderState<string, Error>(
+    undefined,
+    undefined,
+    sharingKey
+  );
+
+  useEffect(() => {
+    handleData(async () => {
+      return 'Hello World';
+    });
+  }, [handleData]);
+
+  return render(
+    (data) => <div>Success({data})</div>,
     () => <p>Idle</p>,
     () => <p>Loading..</p>,
     (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
   );
 };
+
+export const ComponentB = () => {
+  const [render, handleData] = useRenderState<string, Error>(
+    undefined,
+    undefined,
+    sharingKey
+  );
+
+  return render(
+    (data) => <div>Success({data})</div>,
+    () => <p>Idle</p>,
+    () => <p>Loading..</p>,
+    (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
+  );
+};
+
+export const App = () => {
+  return (
+    <>
+      <ComponentA />
+      <ComponentB />
+    </>
+  );
+};
 ```
-Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
+Demo: https://stackblitz.com/edit/stackblitz-starters-gb4yt6
 
 ## Contributors ✨
 
