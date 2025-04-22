@@ -1,13 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Status,
   RenderIdle,
@@ -15,61 +6,24 @@ import {
   RenderLoading,
   RenderError,
 } from "./use-render-state.interface";
-import { RenderStateContext } from "../providers";
 
 /**
  * useRenderState
  */
-const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error, key?: string) => {
-  const currentKey = key ?? useId();
-  const reenderStateContext = useContext(RenderStateContext);
-  const store = useMemo(() => reenderStateContext.getStore(), [reenderStateContext]);
-  const externalStore = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
-  const externalStoreItem = useMemo(() => externalStore[currentKey], [currentKey, externalStore]);
+const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) => {
   const previousDataRef = useRef<Data>(undefined);
   const previousErrorRef = useRef<Error>(undefined);
-  const currentDataRef = useRef<Data | undefined>(externalStoreItem?.initialData ?? initialData);
-  const currentErrorRef = useRef<Error | undefined>(
-    externalStoreItem?.initialError ?? initialError,
-  );
+  const currentDataRef = useRef<Data | undefined>(initialData);
+  const currentErrorRef = useRef<Error | undefined>(initialError);
   const [status, setStatus] = useState<Status>(() => {
-    if ((externalStoreItem?.initialData ?? initialData) !== undefined) {
+    if (initialData !== undefined) {
       return Status.Success;
     }
-    if ((externalStoreItem?.initialError ?? initialError) !== undefined) {
+    if (initialError !== undefined) {
       return Status.Error;
     }
     return Status.Idle;
   });
-
-  useEffect(() => {
-    /**
-     * Set initial data and error when the component is mounted.
-     */
-    store.set(
-      currentKey,
-      {
-        status: Status.Idle,
-        initialData: currentDataRef.current,
-        initialError: currentErrorRef.current,
-      },
-      true,
-    );
-  }, [currentKey, store]);
-
-  useEffect(() => {
-    /**
-     * Update component state when the external store item is updated.
-     */
-    if (externalStoreItem) {
-      const { currentData, currentError, previousData, previousError } = externalStoreItem;
-      currentDataRef.current = currentData;
-      currentErrorRef.current = currentError;
-      previousDataRef.current = previousData;
-      previousErrorRef.current = previousError;
-      setStatus(externalStoreItem.status);
-    }
-  }, [externalStoreItem]);
 
   /**
    * handleData
@@ -77,41 +31,33 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error, k
   const handleData = useCallback(
     async (processFn: (prevData?: Data, prevError?: Error) => Promise<Data> | Data) => {
       try {
-        store.set(currentKey, {
-          status: Status.Loading,
-          currentData: undefined,
-          previousData: currentDataRef.current,
-          currentError: undefined,
-          previousError: currentErrorRef.current,
-        });
+        previousDataRef.current = currentDataRef.current;
+        previousErrorRef.current = currentErrorRef.current;
+        currentDataRef.current = undefined;
+        currentErrorRef.current = undefined;
+        setStatus(Status.Loading);
         const data = await processFn(previousDataRef.current, previousErrorRef.current);
-        store.set(currentKey, {
-          status: Status.Success,
-          currentData: data,
-        });
+        currentDataRef.current = data;
+        setStatus(Status.Success);
       } catch (error) {
-        store.set(currentKey, {
-          status: Status.Error,
-          currentError: error as Error,
-        });
+        currentErrorRef.current = error as Error;
+        setStatus(Status.Error);
         throw error;
       }
     },
-    [currentKey, store],
+    [],
   );
 
   /**
    * resetData
    */
   const resetData = useCallback(() => {
-    store.set(currentKey, {
-      status: Status.Idle,
-      currentData: undefined,
-      previousData: currentDataRef.current,
-      currentError: undefined,
-      previousError: currentErrorRef.current,
-    });
-  }, [currentKey, store]);
+    previousDataRef.current = currentDataRef.current;
+    previousErrorRef.current = currentErrorRef.current;
+    currentDataRef.current = undefined;
+    currentErrorRef.current = undefined;
+    setStatus(Status.Idle);
+  }, []);
 
   /**
    * render
@@ -171,46 +117,22 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error, k
   const manipulation = useMemo(() => {
     return {
       setStatus: (value: Status) => {
-        store.set(currentKey, { status: value });
+        setStatus(value);
       },
-      setPreviousDataWithoutStatus: (data?: Data) => {
-        store.set(
-          currentKey,
-          {
-            previousData: data,
-          },
-          true,
-        );
+      setPreviousDataWithSilent: (data?: Data) => {
+        previousDataRef.current = data;
       },
-      setPreviousErrorWithoutStatus: (error?: Error) => {
-        store.set(
-          currentKey,
-          {
-            previousError: error,
-          },
-          true,
-        );
+      setPreviousErrorWithSilent: (error?: Error) => {
+        previousErrorRef.current = error;
       },
-      setCurrentDataWithoutStatus: (data?: Data) => {
-        store.set(
-          currentKey,
-          {
-            currentData: data,
-          },
-          true,
-        );
+      setCurrentDataWithSilent: (data?: Data) => {
+        currentDataRef.current = data;
       },
-      setCurrentErrorWithoutStatus: (error?: Error) => {
-        store.set(
-          currentKey,
-          {
-            currentError: error,
-          },
-          true,
-        );
+      setCurrentErrorWithSilent: (error?: Error) => {
+        currentErrorRef.current = error;
       },
     };
-  }, [currentKey, store]);
+  }, []);
 
   return [
     render,
