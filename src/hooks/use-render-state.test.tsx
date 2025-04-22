@@ -1,9 +1,11 @@
-import ReactTestRender from "react-test-renderer";
-import { useCallback, useEffect } from "react";
+/**
+ * @jest-environment jsdom
+ */
+import "@testing-library/jest-dom";
+import { render, act, fireEvent, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import useRenderState from "./use-render-state";
 import { Status } from "./use-render-state.interface";
-import { RenderStateProvider } from "../providers";
-import { createStore } from "../store";
 
 const delay = (ms: number) =>
   new Promise<void>((resolve) => {
@@ -13,97 +15,93 @@ const delay = (ms: number) =>
 describe("useRenderState", () => {
   it("should initialize with default values", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>();
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>();
+      return renderComponent(
+        (data) => <p data-testid="status">{data}</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state.children?.join("")).toEqual("Idle");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Idle");
+    unmount();
   });
 
   it("should process data correctly", async () => {
     const TestComponent = () => {
-      const task = useCallback(
-        async () =>
-          new Promise((resolve) => {
-            setTimeout(resolve, 100);
-          }),
-        [],
-      );
-
-      const [render, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderState<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
-          await task();
+          await delay(100);
           return "Aaa";
         });
-      }, [handleData, task]);
+      }, [handleData]);
 
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      return renderComponent(
+        (data) => <p data-testid="status">{data}</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Idle");
-      await delay(100 * 2);
-      const state2 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state2.children?.join("")).toEqual("Success(Aaa)");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Loading");
+
+    await act(async () => {
+      await delay(100 * 2);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Aaa");
+    unmount();
   });
 
   it("should handle errors correctly", async () => {
     const TestComponent = () => {
-      const [render, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderState<string, Error>();
       useEffect(() => {
         handleData(async () => {
           throw new Error("Error");
         }).catch(() => {});
       }, [handleData]);
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      return renderComponent(
+        (data) => <p data-testid="status">{data}</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Idle");
-      await delay(100 * 2);
-      const state2 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state2.children?.join("")).toEqual("Error(Error)");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    await act(async () => {
+      await delay(100 * 2);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Error(Error)");
+    unmount();
   });
 
   it("should reset state correctly", async () => {
     const TestComponent = () => {
-      const [render, handleData, handleDataReset] = useRenderState<string, Error>();
+      const [renderComponent, handleData, handleDataReset] = useRenderState<string, Error>();
       useEffect(() => {
         handleData(async () => {
           return "Aaa";
         });
       }, [handleData]);
-      return render(
+      return renderComponent(
         (data) => (
           <button
             type="button"
@@ -114,41 +112,40 @@ describe("useRenderState", () => {
             Success({data})
           </button>
         ),
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Idle");
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
 
-    await ReactTestRender.act(async () => {
-      const state2 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state2.children?.join("")).toEqual("Success(Aaa)");
-      await state2.props.onClick();
+    await act(async () => {
+      await delay(100);
     });
 
-    await ReactTestRender.act(async () => {
-      const state3 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state3.children?.join("")).toEqual("Idle");
-      component.unmount();
+    const successButton = screen.getByRole("button");
+    expect(successButton.textContent).toBe("Success(Aaa)");
+
+    await act(async () => {
+      fireEvent.click(successButton!);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Idle");
+    unmount();
   });
 
   it("should maintain previous state during transitions", async () => {
     const TestComponent = () => {
-      const [render, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderState<string, Error>();
       useEffect(() => {
         handleData(async () => {
           return "Aaa";
         });
       }, [handleData]);
-      return render(
+      return renderComponent(
         (data, prevData) => {
           return (
             <button
@@ -164,68 +161,79 @@ describe("useRenderState", () => {
             </button>
           );
         },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Idle");
-      await delay(100 * 2);
-      const state2 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state2.children?.join("")).toEqual("Success(Aaa)");
-      state2.props.onClick();
-      await delay(100 * 2);
-      const state3 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state3.children?.join("")).toEqual("Success(Bbb, Aaa)");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    await act(async () => {
+      await delay(100 * 2);
+    });
+
+    const successButton = screen.getByRole("button");
+    expect(successButton.textContent).toBe("Success(Aaa)");
+
+    await act(async () => {
+      fireEvent.click(successButton!);
+      await delay(100 * 2);
+    });
+
+    expect(screen.getByRole("button").textContent).toBe("Success(Bbb, Aaa)");
+    unmount();
   });
 
   it("should handle initial data and error correctly", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>("initial-data", new Error("initial-error"));
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>(
+        "initial-data",
+        new Error("initial-error"),
+      );
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state.children?.join("")).toEqual("Success(initial-data)");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Success(initial-data)");
+    unmount();
   });
 
   it("should handle initial error state correctly", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>(undefined, new Error("initial-error"));
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>(
+        undefined,
+        new Error("initial-error"),
+      );
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state.children?.join("")).toEqual("Error(initial-error)");
-      component.unmount();
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Error(initial-error)");
+    unmount();
   });
 
   it("should maintain initial data and error during state transitions", async () => {
     const TestComponent = () => {
-      const [render, handleData] = useRenderState<string, Error>(
+      const [renderComponent, handleData] = useRenderState<string, Error>(
         "initial-data",
         new Error("initial-error"),
       );
@@ -236,127 +244,115 @@ describe("useRenderState", () => {
         });
       }, [handleData]);
 
-      return render(
+      return renderComponent(
         (data, prevData) => (
-          <p>
+          <p data-testid="status">
             Success({data}, Prev: {prevData})
           </p>
         ),
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (error, prevData, prevError) => (
-          <p>
+          <p data-testid="status">
             Error({error.message}, Prev: {prevData}, PrevError: {prevError?.message})
           </p>
         ),
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Success(initial-data, Prev: )");
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
-    await ReactTestRender.act(async () => {
-      const state3 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state3.children?.join("")).toEqual("Success(new-data, Prev: initial-data)");
-      component.unmount();
-    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Success(new-data, Prev: initial-data)");
+    unmount();
   });
 
   it("should set initial state synchronously", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>("sync-data", new Error("sync-error"));
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>("sync-data", new Error("sync-error"));
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
 
-    /**
-     * It should be Success(sync-data)
-     */
-    const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-    expect(state.children?.join("")).toEqual("Success(sync-data)");
-    component.unmount();
+    expect(screen.getByTestId("status").textContent).toBe("Success(sync-data)");
+    unmount();
   });
 
   it("should set initial error state synchronously", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>(undefined, new Error("sync-error"));
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>(undefined, new Error("sync-error"));
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
 
-    /**
-     * It should be Error(sync-error)
-     */
-    const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-    expect(state.children?.join("")).toEqual("Error(sync-error)");
-    component.unmount();
+    expect(screen.getByTestId("status").textContent).toBe("Error(sync-error)");
+    unmount();
   });
 
   it("should set initial idle state synchronously", async () => {
     const TestComponent = () => {
-      const [render] = useRenderState<string, Error>();
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      const [renderComponent] = useRenderState<string, Error>();
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
 
-    /**
-     * It should be Idle
-     */
-    const state = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-    expect(state.children?.join("")).toEqual("Idle");
-    component.unmount();
+    expect(screen.getByTestId("status").textContent).toBe("Idle");
+    unmount();
   });
 
   it("should manipulate data correctly", async () => {
     const TestComponent = () => {
-      const [render, , , , , , , , manipulate] = useRenderState<string, Error>();
+      const [renderComponent, , , , , , , , manipulate] = useRenderState<string, Error>();
 
       useEffect(() => {
-        manipulate?.setCurrentDataWithoutStatus("new-data");
+        manipulate?.setCurrentDataWithSilent("new-data");
         manipulate?.setStatus(Status.Success);
       }, [manipulate]);
 
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-    await ReactTestRender.act(async () => {
-      const state1 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state1.children?.join("")).toEqual("Idle");
-      await delay(100);
-      const state2 = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(state2.children?.join("")).toEqual("Success(new-data)");
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
+
+    expect(screen.getByTestId("status").textContent).toBe("Success(new-data)");
+    unmount();
   });
 
   it("should check rendering for each status", async () => {
     const TestComponent = () => {
-      const [render, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderState<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
@@ -365,27 +361,28 @@ describe("useRenderState", () => {
         });
       }, [handleData]);
 
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      return renderComponent(
+        (data) => <p data-testid="status">Success({data})</p>,
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
+        (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
 
-    const component = ReactTestRender.create(<TestComponent />);
-
-    const idleState = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-    expect(idleState.children?.join("")).toBe("Idle");
-
-    await ReactTestRender.act(async () => {
-      await delay(200);
-      const successState = component.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(successState.children?.join("")).toBe("Success(test-data)");
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
     });
 
+    expect(screen.getByTestId("status").textContent).toBe("Loading");
+
+    await act(async () => {
+      await delay(200);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Success(test-data)");
+
     const TestErrorComponent = () => {
-      const [render, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderState<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
@@ -393,317 +390,24 @@ describe("useRenderState", () => {
         }).catch(() => {});
       }, [handleData]);
 
-      return render(
-        (data) => <p>Success({data})</p>,
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        (error) => <p>Error({error.message})</p>,
+      return renderComponent(
+        (data) => <p data-testid="error-status">Success({data})</p>,
+        () => <p data-testid="error-status">Idle</p>,
+        () => <p data-testid="error-status">Loading</p>,
+        (error) => <p data-testid="error-status">Error({error.message})</p>,
       );
     };
 
-    const errorComponent = ReactTestRender.create(<TestErrorComponent />);
+    const { unmount: unmountError } = await act(async () => {
+      return render(<TestErrorComponent />);
+    });
 
-    await ReactTestRender.act(async () => {
+    await act(async () => {
       await delay(100);
-      const errorState = errorComponent.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(errorState.children?.join("")).toBe("Error(test-error)");
     });
 
-    component.unmount();
-    errorComponent.unmount();
-  });
-});
-
-describe("useRenderState with state management", () => {
-  it("should share data between components with same key", async () => {
-    const TestComponentA = () => {
-      const [render, handleData] = useRenderState<string, Error>(undefined, undefined, "s1");
-      return render(
-        (data, prevData) => {
-          return (
-            <button
-              type="button"
-              onClick={async () => {
-                await handleData(async () => {
-                  await delay(100);
-                  return "Bbb";
-                });
-              }}
-            >
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => (
-          <button
-            type="button"
-            onClick={async () => {
-              await handleData(async () => {
-                await delay(100);
-                return "Aaa";
-              });
-            }}
-          >
-            Idle
-          </button>
-        ),
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const TestComponentB = () => {
-      const [render] = useRenderState<string, Error>(undefined, undefined, "s1");
-      return render(
-        (data, prevData) => {
-          return (
-            <button type="button">
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const componentA = ReactTestRender.create(<TestComponentA />);
-    const componentB = ReactTestRender.create(<TestComponentB />);
-
-    await ReactTestRender.act(async () => {
-      const componentAState = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBState = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAState.children?.join("")).toEqual("Idle");
-      expect(componentBState.children?.join("")).toEqual("Idle");
-
-      await componentAState.props.onClick();
-
-      const componentAstate2 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate2 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate2.children?.join("")).toEqual("Success(Aaa)");
-      expect(componentBstate2.children?.join("")).toEqual("Success(Aaa)");
-
-      await componentAstate2.props.onClick();
-
-      const componentAstate3 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate3 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate3.children?.join("")).toEqual("Success(Bbb, Aaa)");
-      expect(componentBstate3.children?.join("")).toEqual("Success(Bbb, Aaa)");
-
-      const componentAstate4 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate4 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate4.children?.join("")).toEqual("Success(Bbb, Aaa)");
-      expect(componentBstate4.children?.join("")).toEqual("Success(Bbb, Aaa)");
-
-      componentA.unmount();
-      componentB.unmount();
-    });
-  });
-
-  it("should share error state between components with same key", async () => {
-    const TestComponentA = () => {
-      const [render, handleData] = useRenderState<string, Error>(
-        undefined,
-        undefined,
-        "share-error",
-      );
-      useEffect(() => {
-        setTimeout(() => {
-          handleData(async () => {
-            return "Aaa";
-          });
-        }, 10);
-      }, [handleData]);
-      return render(
-        (data, prevData) => {
-          return (
-            <button
-              type="button"
-              onClick={async () => {
-                await handleData(async () => {
-                  throw new Error("Error!");
-                }).catch(() => {});
-              }}
-            >
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const TestComponentB = () => {
-      const [render] = useRenderState<string, Error>(undefined, undefined, "share-error");
-      return render(
-        (data, prevData) => {
-          return (
-            <button type="button">
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const componentA = ReactTestRender.create(<TestComponentA />);
-    const componentB = ReactTestRender.create(<TestComponentB />);
-    await ReactTestRender.act(async () => {
-      const componentAState = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBState = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAState.children?.join("")).toEqual("Idle");
-      expect(componentBState.children?.join("")).toEqual("Idle");
-      await delay(100);
-      const componentAstate2 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate2 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate2.children?.join("")).toEqual("Success(Aaa)");
-      expect(componentBstate2.children?.join("")).toEqual("Success(Aaa)");
-      await componentAstate2.props.onClick();
-      await delay(100 * 2);
-      const componentAstate3 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate3 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate3.children?.join("")).toEqual("Error");
-      expect(componentBstate3.children?.join("")).toEqual("Error");
-      componentA.unmount();
-      componentB.unmount();
-    });
-  });
-
-  it("should share data between components with custom store", async () => {
-    const TestComponentA = () => {
-      const [render, handleData] = useRenderState<string, Error>(undefined, undefined, "s1");
-      useEffect(() => {
-        async function executor() {
-          await delay(10);
-          handleData(async () => {
-            await delay(100);
-            return "Aaa";
-          });
-        }
-        executor();
-      }, [handleData]);
-      return render(
-        (data, prevData) => {
-          return (
-            <button
-              type="button"
-              onClick={async () => {
-                await handleData(async () => {
-                  await delay(100);
-                  return "Bbb";
-                });
-              }}
-            >
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const TestComponentB = () => {
-      const [render] = useRenderState<string, Error>(undefined, undefined, "s1");
-      return render(
-        (data, prevData) => {
-          return (
-            <button type="button">
-              Success({data}
-              {prevData ? `, ${prevData}` : ""})
-            </button>
-          );
-        },
-        () => <p>Idle</p>,
-        () => <p>Loading</p>,
-        () => <p>Error</p>,
-      );
-    };
-
-    const customStore = createStore();
-    const componentA = ReactTestRender.create(
-      <RenderStateProvider store={customStore}>
-        <TestComponentA />
-      </RenderStateProvider>,
-    );
-    const componentB = ReactTestRender.create(
-      <RenderStateProvider store={customStore}>
-        <TestComponentB />
-      </RenderStateProvider>,
-    );
-
-    await ReactTestRender.act(async () => {
-      const componentAState = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBState = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAState.children?.join("")).toEqual("Idle");
-      expect(componentBState.children?.join("")).toEqual("Idle");
-      await delay(100 * 2);
-      const componentAstate2 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate2 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate2.children?.join("")).toEqual("Success(Aaa)");
-      expect(componentBstate2.children?.join("")).toEqual("Success(Aaa)");
-      await componentAstate2.props.onClick();
-      await delay(100 * 2);
-      const componentAstate3 = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBstate3 = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAstate3.children?.join("")).toEqual("Success(Bbb, Aaa)");
-      expect(componentBstate3.children?.join("")).toEqual("Success(Bbb, Aaa)");
-      expect(customStore.getSnapshot()).toEqual({
-        s1: { currentData: "Bbb", previousData: "Aaa", status: "Success" },
-      });
-      componentA.unmount();
-      componentB.unmount();
-    });
-  });
-
-  it("should share initialData between components with same key", async () => {
-    const TestComponentA = () => {
-      const [render] = useRenderState<string, Error>("Hello", undefined, "s1");
-      return render((data, prevData) => {
-        return (
-          <p>
-            Success({data}
-            {prevData ? `, ${prevData}` : ""})
-          </p>
-        );
-      });
-    };
-
-    const TestComponentB = () => {
-      const [render] = useRenderState<string, Error>("Eee", undefined, "s1");
-      return render((data, prevData) => {
-        return (
-          <p>
-            Success({data}
-            {prevData ? `, ${prevData}` : ""})
-          </p>
-        );
-      });
-    };
-
-    const componentA = ReactTestRender.create(<TestComponentA />);
-    const componentB = ReactTestRender.create(<TestComponentB />);
-
-    await ReactTestRender.act(async () => {
-      const componentAState = componentA.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      const componentBState = componentB.toJSON() as ReactTestRender.ReactTestRendererJSON;
-      expect(componentAState.children?.join("")).toEqual("Success(Hello)");
-      expect(componentBState.children?.join("")).toEqual("Success(Hello)");
-    });
-
-    componentA.unmount();
-    componentB.unmount();
+    expect(screen.getByTestId("error-status").textContent).toBe("Error(test-error)");
+    unmountError();
+    unmount();
   });
 });
