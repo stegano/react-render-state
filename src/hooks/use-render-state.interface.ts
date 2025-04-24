@@ -1,6 +1,32 @@
 import { ReactNode } from "react";
 
 /**
+ * State
+ */
+export interface State<Data, Error> {
+  /**
+   * status
+   */
+  status: Status;
+  /**
+   * currentData
+   */
+  currentData?: Data;
+  /**
+   * previousData
+   */
+  previousData?: Data;
+  /**
+   * currentError
+   */
+  currentError?: Error;
+  /**
+   * previousError
+   */
+  previousError?: Error;
+}
+
+/**
  * Status
  */
 export enum Status {

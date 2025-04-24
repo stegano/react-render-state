@@ -10,24 +10,26 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Success,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
     });
     expect(store.getSnapshot()).toEqual({
       data: {
+        latestUpdatedId: "data",
         status: Status.Success,
-        currentData: ["a", "b", "c"],
+        currentData: ["A", "B", "C"],
         previousData: undefined,
         currentError: undefined,
         previousError: undefined,
-        initialData: ["a", "b", "c"],
+        initialData: ["A", "B", "C"],
         initialError: undefined,
       },
     });
@@ -36,33 +38,36 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Error,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
     });
     store.set("data", {
+      latestUpdatedId: "data",
       status: Status.Success,
-      currentData: ["d", "e", "f"],
-      previousData: ["a", "b", "c"],
+      currentData: ["D", "E", "F"],
+      previousData: ["A", "B", "C"],
       currentError: undefined,
       previousError: undefined,
-      initialData: ["a", "b", "c"],
+      initialData: ["A", "B", "C"],
       initialError: undefined,
     });
     expect(store.getSnapshot()).toEqual({
       data: {
+        latestUpdatedId: "data",
         status: Status.Success,
-        currentData: ["d", "e", "f"],
-        previousData: ["a", "b", "c"],
+        currentData: ["D", "E", "F"],
+        previousData: ["A", "B", "C"],
         currentError: undefined,
         previousError: undefined,
-        initialData: ["a", "b", "c"],
+        initialData: ["A", "B", "C"],
         initialError: undefined,
       },
     });
@@ -71,12 +76,13 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Success,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
@@ -84,12 +90,13 @@ describe("store", () => {
     const listener = jest.fn();
     store.subscribe(listener);
     store.set("data", {
+      latestUpdatedId: "data",
       status: Status.Success,
-      currentData: ["d", "e", "f"],
-      previousData: ["a", "b", "c"],
+      currentData: ["D", "E", "F"],
+      previousData: ["A", "B", "C"],
       currentError: undefined,
       previousError: undefined,
-      initialData: ["a", "b", "c"],
+      initialData: ["A", "B", "C"],
       initialError: undefined,
     });
     expect(listener).toHaveBeenCalledTimes(1);
@@ -98,12 +105,13 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Success,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
@@ -112,12 +120,13 @@ describe("store", () => {
     const unsubscribe = store.subscribe(listener);
     unsubscribe();
     store.set("data", {
+      latestUpdatedId: "data",
       status: Status.Success,
-      currentData: ["d", "e", "f"],
-      previousData: ["a", "b", "c"],
+      currentData: ["D", "E", "F"],
+      previousData: ["A", "B", "C"],
       currentError: undefined,
       previousError: undefined,
-      initialData: ["a", "b", "c"],
+      initialData: ["A", "B", "C"],
       initialError: undefined,
     });
     expect(listener).toHaveBeenCalledTimes(0);
@@ -126,23 +135,25 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Success,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
     });
     expect(store.get("data")).toEqual({
+      latestUpdatedId: "data",
       status: Status.Success,
-      currentData: ["a", "b", "c"],
+      currentData: ["A", "B", "C"],
       previousData: undefined,
       currentError: undefined,
       previousError: undefined,
-      initialData: ["a", "b", "c"],
+      initialData: ["A", "B", "C"],
       initialError: undefined,
     });
   });
@@ -150,12 +161,13 @@ describe("store", () => {
     const store = createStore({
       initialStoreData: {
         data: {
+          latestUpdatedId: "data",
           status: Status.Success,
-          currentData: ["a", "b", "c"],
+          currentData: ["A", "B", "C"],
           previousData: undefined,
           currentError: undefined,
           previousError: undefined,
-          initialData: ["a", "b", "c"],
+          initialData: ["A", "B", "C"],
           initialError: undefined,
         },
       },
@@ -165,20 +177,23 @@ describe("store", () => {
     store.set(
       "data",
       {
+        latestUpdatedId: "data",
         status: Status.Success,
-        currentData: ["d", "e", "f"],
+        currentData: ["D", "E", "F"],
       },
+      true,
       true,
     );
     expect(dummyFn).toHaveBeenCalledTimes(0);
     expect(store.getSnapshot()).toEqual({
       data: {
+        latestUpdatedId: "data",
         status: Status.Success,
-        currentData: ["d", "e", "f"],
+        currentData: ["D", "E", "F"],
         previousData: undefined,
         currentError: undefined,
         previousError: undefined,
-        initialData: ["a", "b", "c"],
+        initialData: ["A", "B", "C"],
         initialError: undefined,
       },
     });

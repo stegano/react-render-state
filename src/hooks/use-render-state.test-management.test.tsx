@@ -4,7 +4,7 @@
 import "@testing-library/jest-dom";
 import { render, act, fireEvent, screen } from "@testing-library/react";
 import { useEffect } from "react";
-import useRenderState from "./use-render-state";
+import useRenderStateManagement from "./use-render-state-management";
 import { Status } from "./use-render-state.interface";
 
 const delay = (ms: number) =>
@@ -12,10 +12,10 @@ const delay = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
-describe("useRenderState", () => {
+describe("useRenderStateManagement", () => {
   it("should initialize with default values", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>();
+      const [renderComponent] = useRenderStateManagement<string, Error>();
       return renderComponent(
         (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
@@ -34,7 +34,7 @@ describe("useRenderState", () => {
 
   it("should process data correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
@@ -67,7 +67,7 @@ describe("useRenderState", () => {
 
   it("should handle errors correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
       useEffect(() => {
         handleData(async () => {
           throw new Error("Error");
@@ -95,7 +95,10 @@ describe("useRenderState", () => {
 
   it("should reset state correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData, handleDataReset] = useRenderState<string, Error>();
+      const [renderComponent, handleData, handleDataReset] = useRenderStateManagement<
+        string,
+        Error
+      >();
       useEffect(() => {
         handleData(async () => {
           return "Aaa";
@@ -139,7 +142,7 @@ describe("useRenderState", () => {
 
   it("should maintain previous state during transitions", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
       useEffect(() => {
         handleData(async () => {
           return "Aaa";
@@ -189,7 +192,7 @@ describe("useRenderState", () => {
 
   it("should handle initial data and error correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>(
+      const [renderComponent] = useRenderStateManagement<string, Error>(
         "initialData",
         new Error("initialError"),
       );
@@ -211,7 +214,10 @@ describe("useRenderState", () => {
 
   it("should handle initial error state correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>(undefined, new Error("initialError"));
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        undefined,
+        new Error("initialError"),
+      );
       return renderComponent(
         (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
@@ -230,7 +236,7 @@ describe("useRenderState", () => {
 
   it("should maintain initial data and error during state transitions", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>(
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>(
         "initialData",
         new Error("initialError"),
       );
@@ -267,7 +273,10 @@ describe("useRenderState", () => {
 
   it("should set initial state synchronously", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>("sync-data", new Error("sync-error"));
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        "sync-data",
+        new Error("syncError"),
+      );
       return renderComponent(
         (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
@@ -286,7 +295,10 @@ describe("useRenderState", () => {
 
   it("should set initial error state synchronously", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>(undefined, new Error("sync-error"));
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        undefined,
+        new Error("syncError"),
+      );
       return renderComponent(
         (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
@@ -299,13 +311,13 @@ describe("useRenderState", () => {
       return render(<TestComponent />);
     });
 
-    expect(screen.getByTestId("status").textContent).toBe("Error(sync-error)");
+    expect(screen.getByTestId("status").textContent).toBe("Error(syncError)");
     unmount();
   });
 
   it("should set initial idle state synchronously", async () => {
     const TestComponent = () => {
-      const [renderComponent] = useRenderState<string, Error>();
+      const [renderComponent] = useRenderStateManagement<string, Error>();
       return renderComponent(
         (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
@@ -324,16 +336,14 @@ describe("useRenderState", () => {
 
   it("should manipulate data correctly", async () => {
     const TestComponent = () => {
-      const [renderComponent, , , , , , , , manipulate] = useRenderState<string, Error>();
+      const [renderComponent, , , , , , , , manipulate] = useRenderStateManagement<string, Error>();
 
       useEffect(() => {
-        manipulate((prev) => {
-          return {
-            ...prev,
-            currentData: "newData",
-            status: Status.Success,
-          };
-        });
+        manipulate((prev) => ({
+          ...prev,
+          currentData: "newData",
+          status: Status.Success,
+        }));
       }, [manipulate]);
 
       return renderComponent(
@@ -354,7 +364,7 @@ describe("useRenderState", () => {
 
   it("should check rendering for each status", async () => {
     const TestComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
@@ -384,11 +394,11 @@ describe("useRenderState", () => {
     expect(screen.getByTestId("status").textContent).toBe("Success(testData)");
 
     const TestErrorComponent = () => {
-      const [renderComponent, handleData] = useRenderState<string, Error>();
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
 
       useEffect(() => {
         handleData(async () => {
-          throw new Error("test-error");
+          throw new Error("testError");
         }).catch(() => {});
       }, [handleData]);
 
@@ -408,8 +418,155 @@ describe("useRenderState", () => {
       await delay(100);
     });
 
-    expect(screen.getByTestId("errorStatus").textContent).toBe("Error(test-error)");
+    expect(screen.getByTestId("errorStatus").textContent).toBe("Error(testError)");
     unmountError();
     unmount();
+  });
+});
+
+describe("useRenderStateManagement data sharing between components", () => {
+  it("should share initial data between components", async () => {
+    const TestComponentA = () => {
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        "initialData",
+        undefined,
+        "sharing1",
+      );
+      return renderComponent(
+        (data) => <p data-testid="statusA">Success({data})</p>,
+        () => <p data-testid="statusA">Idle</p>,
+        () => <p data-testid="statusA">Loading</p>,
+        (error) => <p data-testid="statusA">Error({error.message})</p>,
+      );
+    };
+
+    const TestComponentB = () => {
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        "initialData(=The initial data shouldn't be changed)",
+        undefined,
+        "sharing1",
+      );
+      return renderComponent(
+        (data) => <p data-testid="statusB">Success({data})</p>,
+        () => <p data-testid="statusB">Idle</p>,
+        () => <p data-testid="statusB">Loading</p>,
+        (error) => <p data-testid="statusB">Error({error.message})</p>,
+      );
+    };
+
+    const { unmount: unmountA } = await act(async () => {
+      return render(<TestComponentA />);
+    });
+
+    const { unmount: unmountB } = await act(async () => {
+      return render(<TestComponentB />);
+    });
+
+    expect(screen.getByTestId("statusA").textContent).toBe("Success(initialData)");
+    expect(screen.getByTestId("statusB").textContent).toBe("Success(initialData)");
+    unmountA();
+    unmountB();
+  });
+
+  it("should share initial error between components", async () => {
+    const TestComponentA = () => {
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        undefined,
+        new Error("initialError"),
+        "sharing2",
+      );
+      return renderComponent(
+        (data) => <p data-testid="statusA">Success({data})</p>,
+        () => <p data-testid="statusA">Idle</p>,
+        () => <p data-testid="statusA">Loading</p>,
+        (error) => <p data-testid="statusA">Error({error.message})</p>,
+      );
+    };
+
+    const TestComponentB = () => {
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        undefined,
+        new Error("initialError(=The initial error shouldn't be changed)"),
+        "sharing2",
+      );
+      return renderComponent(
+        (data) => <p data-testid="statusB">Success({data})</p>,
+        () => <p data-testid="statusB">Idle</p>,
+        () => <p data-testid="statusB">Loading</p>,
+        (error) => <p data-testid="statusB">Error({error.message})</p>,
+      );
+    };
+
+    const { unmount: unmountA } = await act(async () => {
+      return render(<TestComponentA />);
+    });
+
+    const { unmount: unmountB } = await act(async () => {
+      return render(<TestComponentB />);
+    });
+
+    expect(screen.getByTestId("statusA").textContent).toBe("Error(initialError)");
+    expect(screen.getByTestId("statusB").textContent).toBe("Error(initialError)");
+    unmountA();
+    unmountB();
+  });
+
+  it("should share data and status between components", async () => {
+    const TestComponentA = () => {
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>(
+        undefined,
+        undefined,
+        "sharing3",
+      );
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(100);
+          return "testData";
+        });
+      }, [handleData]);
+
+      return renderComponent(
+        (data) => <p data-testid="statusA">Success({data})</p>,
+        () => <p data-testid="statusA">Idle</p>,
+        () => <p data-testid="statusA">Loading</p>,
+        (error) => <p data-testid="statusA">Error({error.message})</p>,
+      );
+    };
+
+    const TestComponentB = () => {
+      const [renderComponent] = useRenderStateManagement<string, Error>(
+        undefined,
+        undefined,
+        "sharing3",
+      );
+      return renderComponent(
+        (data) => <p data-testid="statusB">Success({data})</p>,
+        () => <p data-testid="statusB">Idle</p>,
+        () => <p data-testid="statusB">Loading</p>,
+        (error) => <p data-testid="statusB">Error({error.message})</p>,
+      );
+    };
+
+    const { unmount: unmountA } = await act(async () => {
+      return render(<TestComponentA />);
+    });
+
+    const { unmount: unmountB } = await act(async () => {
+      return render(<TestComponentB />);
+    });
+
+    expect(screen.getByTestId("statusA").textContent).toBe("Loading");
+    expect(screen.getByTestId("statusB").textContent).toBe("Loading");
+
+    await act(async () => {
+      await delay(300);
+    });
+
+    expect(screen.getByTestId("statusA").textContent).toBe("Success(testData)");
+    expect(screen.getByTestId("statusB").textContent).toBe("Success(testData)");
+
+    unmountA();
+    unmountB();
   });
 });

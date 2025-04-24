@@ -47,16 +47,16 @@ Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
 
 ### Data Sharing for Rendering
  
-Without state management libraries like Redux, it is possible to share data and rendering state among multiple containers(components).
+Without state management libraries like Redux and Zustand, it is possible to share data and rendering state among multiple containers(components).
 
 ```tsx
 import { useCallback, useEffect } from 'react';
-import { useRenderState } from 'react-render-state';
+import { useRenderStateManagement } from 'react-render-state';
 
 const sharingKey = 'sharingKey';
 
 export const ComponentA = () => {
-  const [render, handleData] = useRenderState<string, Error>(
+  const [render, handleData] = useRenderStateManagement<string, Error>(
     undefined,
     undefined,
     sharingKey

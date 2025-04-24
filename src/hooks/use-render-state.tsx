@@ -1,16 +1,19 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import {
   Status,
   RenderIdle,
   RenderSuccess,
   RenderLoading,
   RenderError,
+  State,
 } from "./use-render-state.interface";
 
 /**
  * useRenderState
  */
 const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) => {
+  const cId = useId();
+  const id = useMemo(() => `${cId}_renderState`, [cId]);
   const previousDataRef = useRef<Data>(undefined);
   const previousErrorRef = useRef<Error>(undefined);
   const currentDataRef = useRef<Data | undefined>(initialData);
@@ -26,6 +29,40 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
   });
 
   /**
+   * manipulation
+   * [!] These features are for the third party library.
+   */
+  const manipulation = useCallback(
+    (newStateOrFn: State<Data, Error> | ((prev: State<Data, Error>) => State<Data, Error>)) => {
+      if (typeof newStateOrFn === "function") {
+        const callbackFn = newStateOrFn;
+        setStatus((prevState) => {
+          const nextState = callbackFn({
+            previousData: previousDataRef.current,
+            previousError: previousErrorRef.current,
+            currentData: currentDataRef.current,
+            currentError: currentErrorRef.current,
+            status: prevState,
+          });
+          previousDataRef.current = nextState.previousData;
+          previousErrorRef.current = nextState.previousError;
+          currentDataRef.current = nextState.currentData;
+          currentErrorRef.current = nextState.currentError;
+          return nextState.status;
+        });
+      } else {
+        const nextState = newStateOrFn;
+        previousDataRef.current = nextState.previousData;
+        previousErrorRef.current = nextState.previousError;
+        currentDataRef.current = nextState.currentData;
+        currentErrorRef.current = nextState.currentError;
+        setStatus(nextState.status);
+      }
+    },
+    [],
+  );
+
+  /**
    * handleData
    */
   const handleData = useCallback(
@@ -39,6 +76,7 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
         const data = await processFn(previousDataRef.current, previousErrorRef.current);
         currentDataRef.current = data;
         setStatus(Status.Success);
+        return data;
       } catch (error) {
         currentErrorRef.current = error as Error;
         setStatus(Status.Error);
@@ -110,30 +148,6 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
     [status],
   );
 
-  /**
-   * manipulation
-   * [!] These features are for the third party library.
-   */
-  const manipulation = useMemo(() => {
-    return {
-      setStatus: (value: Status) => {
-        setStatus(value);
-      },
-      setPreviousDataWithSilent: (data?: Data) => {
-        previousDataRef.current = data;
-      },
-      setPreviousErrorWithSilent: (error?: Error) => {
-        previousErrorRef.current = error;
-      },
-      setCurrentDataWithSilent: (data?: Data) => {
-        currentDataRef.current = data;
-      },
-      setCurrentErrorWithSilent: (error?: Error) => {
-        currentErrorRef.current = error;
-      },
-    };
-  }, []);
-
   return [
     render,
     handleData,
@@ -144,6 +158,7 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
     previousDataRef.current,
     previousErrorRef.current,
     manipulation,
+    id,
   ] as const;
 };
 

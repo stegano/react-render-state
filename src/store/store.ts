@@ -27,12 +27,21 @@ export const createStore = (
       store._store = {};
       store._emit();
     },
-    set: (id, data, silent = false) => {
+    set: (id, data, partial = true, silent = false) => {
       const prevData = store._store[id];
-      store._store = {
-        ...store._store,
-        [id]: { ...prevData, ...data },
-      };
+      if (partial) {
+        store._store = {
+          ...store._store,
+          [id]: { ...prevData, ...data },
+        };
+      } else {
+        store._store = {
+          ...store._store,
+          [id]: {
+            ...data,
+          },
+        };
+      }
       if (silent === false) {
         store._emit();
       }
@@ -42,6 +51,10 @@ export const createStore = (
     },
     has: (id) => {
       return id in store._store;
+    },
+    remove: (id) => {
+      delete store._store[id];
+      store._emit();
     },
     subscribe: (listener) => {
       store._listenerList.push(listener);
