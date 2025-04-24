@@ -6,37 +6,35 @@ export interface RenderStateData {
     /**
      * initialData
      */
-    initialData: any;
+    initialData?: any;
     /**
      * initialError
      */
-    initialError: any;
+    initialError?: any;
+    /**
+     * currentData
+     */
+    currentData?: any;
+    /**
+     * previousData
+     */
+    previousData?: any;
+    /**
+     * currentError
+     */
+    currentError?: any;
+    /**
+     * previousError
+     */
+    previousError?: any;
     /**
      * status
      */
     status: Status;
     /**
-     * currentData
+     * latestUpdatedId
      */
-    currentData: any;
-    /**
-     * previousData
-     */
-    previousData: any;
-    /**
-     * currentError
-     */
-    currentError: any;
-    /**
-     * previousError
-     */
-    previousError: any;
-}
-/**
- * Listener
- */
-export interface Listener {
-    (): void;
+    latestUpdatedId: string;
 }
 /**
  * `createStore` function options
@@ -45,40 +43,10 @@ export interface Options {
     initialStoreData?: Record<string, RenderStateData>;
 }
 /**
- * Getter
+ * Listener
  */
-export interface Getter {
-    (id: string): RenderStateData;
-}
-/**
- * Setter
- */
-export interface Setter {
-    (id: string, data: Partial<RenderStateData>, silent?: boolean): void;
-}
-/**
- * GetSnapshot
- */
-export interface GetSnapshot {
-    (): Record<string, RenderStateData>;
-}
-/**
- * Subscribe
- */
-export interface Subscribe {
-    (listener: Listener): () => void;
-}
-/**
- * Emit
- */
-export interface Emit {
+export interface Listener {
     (): void;
-}
-/**
- * Has
- */
-export interface Has {
-    (id: string): boolean;
 }
 /**
  * Store
@@ -100,25 +68,29 @@ export interface Store {
     /**
      * Event emitter
      */
-    _emit: Emit;
+    _emit: () => void;
     /**
      * Get data from the internal data store
      */
-    get: Getter;
+    get: (id: string) => RenderStateData;
     /**
      * Set data in the internal data store
      */
-    set: Setter;
+    set: (id: string, data: RenderStateData, partial?: boolean, silent?: boolean) => void;
     /**
      * Register an event listener in the store to detect changes
      */
-    subscribe: Subscribe;
+    subscribe: (listener: Listener) => () => void;
     /**
      * Get a snapshot of the data from the internal data store
      */
-    getSnapshot: GetSnapshot;
+    getSnapshot: () => Record<string, RenderStateData>;
     /**
      * Check if the data exists in the internal data store
      */
-    has: Has;
+    has: (id: string) => boolean;
+    /**
+     * Remove a data from the internal data store
+     */
+    remove: (id: string) => void;
 }
