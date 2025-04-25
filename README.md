@@ -36,14 +36,78 @@ export const App = () => {
   }, [handleData]);
 
   return render(
-    (data) => <div>Success({data})</div>,           // → renderSuccess
     () => <p>Idle</p>,                              // → renderIdle
     () => <p>Loading..</p>,                         // → renderLoading
+    (data) => <div>Success({data})</div>,           // → renderSuccess
     (error) => <p>Error. :(, ({error.message})</p>  // → renderError
   );
 };
 ```
 Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
+
+<details>
+<summary>APIs</summary>
+
+* useRenderState
+
+  * Arguments
+
+    > These values can be used as initial values or for server-side rendering.
+
+    * initialData?: Data
+
+      > initialData is used as the initial data when status is `"success"`.
+
+    * initialError?: Error
+
+      > initialError is used as the initial error when status is `"error"`.
+
+  * Returns
+
+    * render
+      
+      > The render function that handles each data status and renders the component accordingly.
+      
+      ```typescript
+      (
+        renderIdle?: (prevData?: Data, prevError?: Error) => ReactNode,
+        renderLoading?: (prevData?: Data, prevError?: Error) => ReactNode,
+        renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
+        renderError?: (error: Error, prevData?: Data, prevError?: Error) => ReactNode,
+      ) | (
+        renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
+      ) => ReactNode
+      ```
+
+    * handleData
+      
+      > Async function to process data.
+      
+      ```typescript
+      (processFn: (prevData?: Data, prevError?: Error) => Promise<Data> | Data) => Promise<Data>
+      ```
+
+    * resetData
+      
+      > Function to reset status to `"Idle"`.
+
+    * status
+      
+      > Current status (`"Idle"` | `"Loading"` | `"Success"` | `"Error"`).
+
+    * currentData, previousData
+      
+      > Current and previous data values.
+
+    * currentError, previousError
+      
+      > Current and previous error values.
+
+    * manipulation
+      
+      > The manipulation function enables manual updates of internal data and status when integrating third-party libraries.
+
+</details>
 
 ### Data Sharing for Rendering
  
@@ -59,7 +123,7 @@ export const ComponentA = () => {
   const [render, handleData] = useRenderStateManagement<string, Error>(
     undefined,
     undefined,
-    sharingKey
+    sharingKey // Add the sharingKey to identify updated data and status
   );
 
   useEffect(() => {
@@ -69,24 +133,24 @@ export const ComponentA = () => {
   }, [handleData]);
 
   return render(
-    (data) => <div>Success({data})</div>,
     () => <p>Idle</p>,
     () => <p>Loading..</p>,
+    (data) => <div>Success({data})</div>,
     (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
   );
 };
 
 export const ComponentB = () => {
-  const [render, handleData] = useRenderState<string, Error>(
+  const [render, handleData] = useRenderStateManagement<string, Error>(
     undefined,
     undefined,
     sharingKey
   );
 
   return render(
-    (data) => <div>Success({data})</div>,
     () => <p>Idle</p>,
     () => <p>Loading..</p>,
+    (data) => <div>Success({data})</div>,
     (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
   );
 };
