@@ -1,11 +1,12 @@
 import { useCallback, useId, useMemo, useRef, useState } from "react";
 import {
   Status,
+  State,
+  Render,
   RenderIdle,
   RenderSuccess,
   RenderLoading,
   RenderError,
-  State,
 } from "./use-render-state.interface";
 
 /**
@@ -100,13 +101,15 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
   /**
    * render
    */
-  const render = useCallback(
-    (
-      renderSuccess?: RenderSuccess<Data, Error>,
-      renderIdle?: RenderIdle<Data, Error>,
-      renderLoading?: RenderLoading<Data, Error>,
-      renderError?: RenderError<Data, Error>,
-    ) => {
+  const render: Render<Data, Error> = useCallback(
+    (...args) => {
+      const isSingleArg = args.length === 1;
+      const renderIdle = isSingleArg ? undefined : (args[0] as RenderIdle<Data, Error>);
+      const renderLoading = isSingleArg ? undefined : (args[1] as RenderLoading<Data, Error>);
+      const renderSuccess = isSingleArg
+        ? (args[0] as RenderSuccess<Data, Error>)
+        : (args[2] as RenderSuccess<Data, Error>);
+      const renderError = isSingleArg ? undefined : (args[3] as RenderError<Data, Error>);
       switch (status) {
         case Status.Idle: {
           return renderIdle?.(previousDataRef.current, previousErrorRef.current);

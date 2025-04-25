@@ -17,9 +17,9 @@ describe("useRenderState", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderState<string, Error>();
       return renderComponent(
-        (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">{data}</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -29,6 +29,32 @@ describe("useRenderState", () => {
     });
 
     expect(screen.getByTestId("status").textContent).toBe("Idle");
+    unmount();
+  });
+
+  it("should process data correctly with single argument renderSuccess", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderState<string, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(100);
+          return "Aaa";
+        });
+      }, [handleData]);
+
+      return renderComponent((data) => <p data-testid="status">{data}</p>);
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    await act(async () => {
+      await delay(200);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Aaa");
     unmount();
   });
 
@@ -44,9 +70,9 @@ describe("useRenderState", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">{data}</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -102,6 +128,8 @@ describe("useRenderState", () => {
         });
       }, [handleData]);
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data) => (
           <button
             type="button"
@@ -112,8 +140,6 @@ describe("useRenderState", () => {
             Success({data})
           </button>
         ),
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -146,6 +172,8 @@ describe("useRenderState", () => {
         });
       }, [handleData]);
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data, prevData) => {
           return (
             <button
@@ -161,8 +189,6 @@ describe("useRenderState", () => {
             </button>
           );
         },
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -194,9 +220,9 @@ describe("useRenderState", () => {
         new Error("initialError"),
       );
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -242,13 +268,13 @@ describe("useRenderState", () => {
       }, [handleData]);
 
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data, prevData) => (
           <p data-testid="status">
             Success({data}, Prev: {prevData})
           </p>
         ),
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error, prevData, prevError) => (
           <p data-testid="status">
             Error({error.message}, Prev: {prevData}, PrevError: {prevError?.message})
@@ -269,9 +295,9 @@ describe("useRenderState", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderState<string, Error>("sync-data", new Error("sync-error"));
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -288,9 +314,9 @@ describe("useRenderState", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderState<string, Error>(undefined, new Error("sync-error"));
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -307,9 +333,9 @@ describe("useRenderState", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderState<string, Error>();
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -337,9 +363,9 @@ describe("useRenderState", () => {
       }, [manipulate]);
 
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -364,9 +390,9 @@ describe("useRenderState", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -393,9 +419,9 @@ describe("useRenderState", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="errorStatus">Success({data})</p>,
         () => <p data-testid="errorStatus">Idle</p>,
         () => <p data-testid="errorStatus">Loading</p>,
+        (data) => <p data-testid="errorStatus">Success({data})</p>,
         (error) => <p data-testid="errorStatus">Error({error.message})</p>,
       );
     };

@@ -17,9 +17,9 @@ describe("useRenderStateManagement", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderStateManagement<string, Error>();
       return renderComponent(
-        (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">{data}</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -29,6 +29,32 @@ describe("useRenderStateManagement", () => {
     });
 
     expect(screen.getByTestId("status").textContent).toBe("Idle");
+    unmount();
+  });
+
+  it("should process data correctly with single argument renderSuccess", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderStateManagement<string, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(100);
+          return "Aaa";
+        });
+      }, [handleData]);
+
+      return renderComponent((data) => <p data-testid="status">{data}</p>);
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    await act(async () => {
+      await delay(200);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("Aaa");
     unmount();
   });
 
@@ -44,9 +70,9 @@ describe("useRenderStateManagement", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">{data}</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -74,9 +100,9 @@ describe("useRenderStateManagement", () => {
         }).catch(() => {});
       }, [handleData]);
       return renderComponent(
-        (data) => <p data-testid="status">{data}</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">{data}</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -105,6 +131,8 @@ describe("useRenderStateManagement", () => {
         });
       }, [handleData]);
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data) => (
           <button
             type="button"
@@ -115,8 +143,6 @@ describe("useRenderStateManagement", () => {
             Success({data})
           </button>
         ),
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -149,6 +175,8 @@ describe("useRenderStateManagement", () => {
         });
       }, [handleData]);
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data, prevData) => {
           return (
             <button
@@ -164,8 +192,6 @@ describe("useRenderStateManagement", () => {
             </button>
           );
         },
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -197,9 +223,9 @@ describe("useRenderStateManagement", () => {
         new Error("initialError"),
       );
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -219,9 +245,9 @@ describe("useRenderStateManagement", () => {
         new Error("initialError"),
       );
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -248,13 +274,13 @@ describe("useRenderStateManagement", () => {
       }, [handleData]);
 
       return renderComponent(
+        () => <p data-testid="status">Idle</p>,
+        () => <p data-testid="status">Loading</p>,
         (data, prevData) => (
           <p data-testid="status">
             Success({data}, Prev: {prevData})
           </p>
         ),
-        () => <p data-testid="status">Idle</p>,
-        () => <p data-testid="status">Loading</p>,
         (error, prevData, prevError) => (
           <p data-testid="status">
             Error({error.message}, Prev: {prevData}, PrevError: {prevError?.message})
@@ -278,9 +304,9 @@ describe("useRenderStateManagement", () => {
         new Error("syncError"),
       );
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -300,9 +326,9 @@ describe("useRenderStateManagement", () => {
         new Error("syncError"),
       );
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -319,9 +345,9 @@ describe("useRenderStateManagement", () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderStateManagement<string, Error>();
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -347,9 +373,9 @@ describe("useRenderStateManagement", () => {
       }, [manipulate]);
 
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -374,9 +400,9 @@ describe("useRenderStateManagement", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="status">Success({data})</p>,
         () => <p data-testid="status">Idle</p>,
         () => <p data-testid="status">Loading</p>,
+        (data) => <p data-testid="status">Success({data})</p>,
         (error) => <p data-testid="status">Error({error.message})</p>,
       );
     };
@@ -403,9 +429,9 @@ describe("useRenderStateManagement", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="errorStatus">Success({data})</p>,
         () => <p data-testid="errorStatus">Idle</p>,
         () => <p data-testid="errorStatus">Loading</p>,
+        (data) => <p data-testid="errorStatus">Success({data})</p>,
         (error) => <p data-testid="errorStatus">Error({error.message})</p>,
       );
     };
@@ -433,9 +459,9 @@ describe("useRenderStateManagement data sharing between components", () => {
         "sharing1",
       );
       return renderComponent(
-        (data) => <p data-testid="statusA">Success({data})</p>,
         () => <p data-testid="statusA">Idle</p>,
         () => <p data-testid="statusA">Loading</p>,
+        (data) => <p data-testid="statusA">Success({data})</p>,
         (error) => <p data-testid="statusA">Error({error.message})</p>,
       );
     };
@@ -447,9 +473,9 @@ describe("useRenderStateManagement data sharing between components", () => {
         "sharing1",
       );
       return renderComponent(
-        (data) => <p data-testid="statusB">Success({data})</p>,
         () => <p data-testid="statusB">Idle</p>,
         () => <p data-testid="statusB">Loading</p>,
+        (data) => <p data-testid="statusB">Success({data})</p>,
         (error) => <p data-testid="statusB">Error({error.message})</p>,
       );
     };
@@ -476,9 +502,9 @@ describe("useRenderStateManagement data sharing between components", () => {
         "sharing2",
       );
       return renderComponent(
-        (data) => <p data-testid="statusA">Success({data})</p>,
         () => <p data-testid="statusA">Idle</p>,
         () => <p data-testid="statusA">Loading</p>,
+        (data) => <p data-testid="statusA">Success({data})</p>,
         (error) => <p data-testid="statusA">Error({error.message})</p>,
       );
     };
@@ -490,9 +516,9 @@ describe("useRenderStateManagement data sharing between components", () => {
         "sharing2",
       );
       return renderComponent(
-        (data) => <p data-testid="statusB">Success({data})</p>,
         () => <p data-testid="statusB">Idle</p>,
         () => <p data-testid="statusB">Loading</p>,
+        (data) => <p data-testid="statusB">Success({data})</p>,
         (error) => <p data-testid="statusB">Error({error.message})</p>,
       );
     };
@@ -527,9 +553,9 @@ describe("useRenderStateManagement data sharing between components", () => {
       }, [handleData]);
 
       return renderComponent(
-        (data) => <p data-testid="statusA">Success({data})</p>,
         () => <p data-testid="statusA">Idle</p>,
         () => <p data-testid="statusA">Loading</p>,
+        (data) => <p data-testid="statusA">Success({data})</p>,
         (error) => <p data-testid="statusA">Error({error.message})</p>,
       );
     };
@@ -541,9 +567,9 @@ describe("useRenderStateManagement data sharing between components", () => {
         "sharing3",
       );
       return renderComponent(
-        (data) => <p data-testid="statusB">Success({data})</p>,
         () => <p data-testid="statusB">Idle</p>,
         () => <p data-testid="statusB">Loading</p>,
+        (data) => <p data-testid="statusB">Success({data})</p>,
         (error) => <p data-testid="statusB">Error({error.message})</p>,
       );
     };
@@ -560,7 +586,7 @@ describe("useRenderStateManagement data sharing between components", () => {
     expect(screen.getByTestId("statusB").textContent).toBe("Loading");
 
     await act(async () => {
-      await delay(300);
+      await delay(200);
     });
 
     expect(screen.getByTestId("statusA").textContent).toBe("Success(testData)");
