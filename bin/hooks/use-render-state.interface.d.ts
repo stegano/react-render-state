@@ -69,3 +69,10 @@ export interface RenderLoading<Data, Error> {
 export interface RenderSuccess<Data, Error> {
     (data: Data, previousData?: Data, previousError?: Error): ReactNode;
 }
+/**
+ * Render
+ */
+export interface Render<Data, Error> {
+    (renderSuccess?: RenderSuccess<Data, Error>): ReactNode;
+    (renderIdle?: RenderIdle<Data, Error>, renderLoading?: RenderLoading<Data, Error>, renderSuccess?: RenderSuccess<Data, Error>, renderError?: RenderError<Data, Error>): ReactNode;
+}
