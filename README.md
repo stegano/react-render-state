@@ -56,56 +56,56 @@ Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
 
     * initialData?: Data
 
-      > initialData is used as the initial data when status is `"success"`.
+      * initialData is used as the initial data when status is `"success"`.
 
     * initialError?: Error
 
-      > initialError is used as the initial error when status is `"error"`.
+      * initialError is used as the initial error when status is `"error"`.
 
   * Returns
 
     * render
       
-      > The render function that handles each data status and renders the component accordingly.
+      * The render function that handles each data status and renders the component accordingly.
       
-      ```typescript
-      (
-        renderIdle?: (prevData?: Data, prevError?: Error) => ReactNode,
-        renderLoading?: (prevData?: Data, prevError?: Error) => ReactNode,
-        renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
-        renderError?: (error: Error, prevData?: Data, prevError?: Error) => ReactNode,
-      ) | (
-        renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
-      ) => ReactNode
-      ```
+        ```typescript
+        (
+          renderIdle?: (prevData?: Data, prevError?: Error) => ReactNode,
+          renderLoading?: (prevData?: Data, prevError?: Error) => ReactNode,
+          renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
+          renderError?: (error: Error, prevData?: Data, prevError?: Error) => ReactNode,
+        ) | (
+          renderSuccess?: (data: Data, prevData?: Data, prevError?: Error) => ReactNode,
+        ) => ReactNode
+        ```
 
     * handleData
       
-      > Async function to process data.
+      * Async function to process data.
       
-      ```typescript
-      (processFn: (prevData?: Data, prevError?: Error) => Promise<Data> | Data) => Promise<Data>
-      ```
+        ```typescript
+        (processFn: (prevData?: Data, prevError?: Error) => Promise<Data> | Data) => Promise<Data>
+        ```
 
     * resetData
       
-      > Function to reset status to `"Idle"`.
+      * Function to reset status to `"Idle"`.
 
     * status
       
-      > Current status (`"Idle"` | `"Loading"` | `"Success"` | `"Error"`).
+      * Current status (`"Idle"` | `"Loading"` | `"Success"` | `"Error"`).
 
     * currentData, previousData
       
-      > Current and previous data values.
+      * Current and previous data values.
 
     * currentError, previousError
       
-      > Current and previous error values.
+      * Current and previous error values.
 
     * manipulation
       
-      > The manipulation function enables manual updates of internal data and status when integrating third-party libraries.
+      * The manipulation function enables manual updates of internal data and status when integrating third-party libraries.
 
 </details>
 
