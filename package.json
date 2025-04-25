@@ -1,6 +1,6 @@
 {
   "name": "react-render-state",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "React Render State: This hook allows you to declaratively define components that will be rendered based on the data processing state.",
   "main": "bin/index.js",
   "types": "bin/index.d.ts",
