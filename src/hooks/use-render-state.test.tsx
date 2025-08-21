@@ -439,3 +439,229 @@ describe("useRenderState", () => {
     unmount();
   });
 });
+
+describe("useRenderState with render options object", () => {
+  it("should render idle state with onIdle option", async () => {
+    const TestComponent = () => {
+      const [renderComponent] = useRenderState<number, Error>();
+      return renderComponent({
+        onIdle: () => <div data-testid="status">render idle</div>,
+        onLoading: () => <div data-testid="status">render loading</div>,
+        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      });
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("render idle");
+    unmount();
+  });
+
+  it("should render loading state with onLoading option", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderState<number, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(100);
+          return 42;
+        });
+      }, [handleData]);
+
+      return renderComponent({
+        onIdle: () => <div data-testid="status">render idle</div>,
+        onLoading: () => <div data-testid="status">render loading</div>,
+        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      });
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("render loading");
+    unmount();
+  });
+
+  it("should render success state with onSuccess option", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderState<number, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(100);
+          return 42;
+        });
+      }, [handleData]);
+
+      return renderComponent({
+        onIdle: () => <div data-testid="status">render idle</div>,
+        onLoading: () => <div data-testid="status">render loading</div>,
+        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      });
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    await act(async () => {
+      await delay(200);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("render success: 42");
+    unmount();
+  });
+
+  it("should render error state with onError option", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderState<number, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          throw new Error("Test error");
+        }).catch(() => {});
+      }, [handleData]);
+
+      return renderComponent({
+        onIdle: () => <div data-testid="status">render idle</div>,
+        onLoading: () => <div data-testid="status">render loading</div>,
+        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      });
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    await act(async () => {
+      await delay(200);
+    });
+
+    expect(screen.getByTestId("status").textContent).toBe("render error Error: Test error");
+    unmount();
+  });
+
+  it("should handle all state transitions with options object", async () => {
+    /* eslint-disable react/no-unstable-nested-components */
+    function TestComponent() {
+      const [renderComponent, handleData, resetData] = useRenderState<number, Error>();
+
+      const renderOptions = {
+        onIdle: () => <div data-testid="status">render idle</div>,
+        onLoading: () => <div data-testid="status">render loading</div>,
+        onSuccess: (data: number) => (
+          <div>
+            <div data-testid="status">render success: {data}</div>
+            <button type="button" data-testid="reset-btn" onClick={() => resetData()}>
+              Reset
+            </button>
+          </div>
+        ),
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      };
+
+      return (
+        <div>
+          {renderComponent(renderOptions)}
+          <button
+            type="button"
+            data-testid="load-btn"
+            onClick={() => {
+              handleData(async () => {
+                await delay(50);
+                return 123;
+              });
+            }}
+          >
+            Load Data
+          </button>
+          <button
+            type="button"
+            data-testid="error-btn"
+            onClick={() => {
+              handleData(async () => {
+                throw new Error("Triggered error");
+              }).catch(() => {});
+            }}
+          >
+            Trigger Error
+          </button>
+        </div>
+      );
+    }
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    // Initial idle state
+    expect(screen.getByTestId("status").textContent).toBe("render idle");
+
+    // Test loading state
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("load-btn"));
+    });
+    expect(screen.getByTestId("status").textContent).toBe("render loading");
+
+    // Test success state
+    await act(async () => {
+      await delay(100);
+    });
+    expect(screen.getByTestId("status").textContent).toBe("render success: 123");
+
+    // Test reset to idle
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("reset-btn"));
+    });
+    expect(screen.getByTestId("status").textContent).toBe("render idle");
+
+    // Test error state
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("error-btn"));
+      await delay(100);
+    });
+    expect(screen.getByTestId("status").textContent).toBe("render error Error: Triggered error");
+
+    unmount();
+  });
+
+  it("should handle partial options object", async () => {
+    const TestComponent = () => {
+      const [renderComponent, handleData] = useRenderState<number, Error>();
+
+      useEffect(() => {
+        handleData(async () => {
+          await delay(50);
+          return 99;
+        });
+      }, [handleData]);
+
+      return renderComponent({
+        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+      });
+    };
+
+    const { unmount } = await act(async () => {
+      return render(<TestComponent />);
+    });
+
+    // Should render nothing for loading state since onLoading is not provided
+    expect(screen.queryByTestId("status")).toBeNull();
+
+    await act(async () => {
+      await delay(100);
+    });
+
+    // Should render success state
+    expect(screen.getByTestId("status").textContent).toBe("render success: 99");
+    unmount();
+  });
+});

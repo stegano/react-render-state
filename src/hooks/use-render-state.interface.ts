@@ -77,14 +77,29 @@ export interface RenderSuccess<Data, Error> {
 }
 
 /**
+ * RenderOptions
+ */
+export interface RenderOptions<Data, Error> {
+  onIdle?: RenderIdle<Data, Error>;
+  onLoading?: RenderLoading<Data, Error>;
+  onSuccess?: RenderSuccess<Data, Error>;
+  onError?: RenderError<Data, Error>;
+}
+
+/**
  * Render
  */
 export interface Render<Data, Error> {
   (renderSuccess?: RenderSuccess<Data, Error>): ReactNode;
+  (
+    renderSuccess?: RenderSuccess<Data, Error>,
+    renderLoading?: RenderLoading<Data, Error>,
+  ): ReactNode;
   (
     renderIdle?: RenderIdle<Data, Error>,
     renderLoading?: RenderLoading<Data, Error>,
     renderSuccess?: RenderSuccess<Data, Error>,
     renderError?: RenderError<Data, Error>,
   ): ReactNode;
+  (renderOptions: RenderOptions<Data, Error>): ReactNode;
 }
