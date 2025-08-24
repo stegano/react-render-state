@@ -92,10 +92,6 @@ export interface RenderOptions<Data, Error> {
 export interface Render<Data, Error> {
   (renderSuccess?: RenderSuccess<Data, Error>): ReactNode;
   (
-    renderSuccess?: RenderSuccess<Data, Error>,
-    renderLoading?: RenderLoading<Data, Error>,
-  ): ReactNode;
-  (
     renderIdle?: RenderIdle<Data, Error>,
     renderLoading?: RenderLoading<Data, Error>,
     renderSuccess?: RenderSuccess<Data, Error>,
