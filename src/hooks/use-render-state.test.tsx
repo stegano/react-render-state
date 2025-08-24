@@ -441,14 +441,16 @@ describe("useRenderState", () => {
 });
 
 describe("useRenderState with render options object", () => {
-  it("should render idle state with onIdle option", async () => {
+  it("should render idle state with renderIdle option", async () => {
     const TestComponent = () => {
       const [renderComponent] = useRenderState<number, Error>();
       return renderComponent({
-        onIdle: () => <div data-testid="status">render idle</div>,
-        onLoading: () => <div data-testid="status">render loading</div>,
-        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderIdle: () => <div data-testid="status">render idle</div>,
+        renderLoading: () => <div data-testid="status">render loading</div>,
+        renderSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       });
     };
 
@@ -460,7 +462,7 @@ describe("useRenderState with render options object", () => {
     unmount();
   });
 
-  it("should render loading state with onLoading option", async () => {
+  it("should render loading state with renderLoading option", async () => {
     const TestComponent = () => {
       const [renderComponent, handleData] = useRenderState<number, Error>();
 
@@ -472,10 +474,12 @@ describe("useRenderState with render options object", () => {
       }, [handleData]);
 
       return renderComponent({
-        onIdle: () => <div data-testid="status">render idle</div>,
-        onLoading: () => <div data-testid="status">render loading</div>,
-        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderIdle: () => <div data-testid="status">render idle</div>,
+        renderLoading: () => <div data-testid="status">render loading</div>,
+        renderSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       });
     };
 
@@ -487,7 +491,7 @@ describe("useRenderState with render options object", () => {
     unmount();
   });
 
-  it("should render success state with onSuccess option", async () => {
+  it("should render success state with renderSuccess option", async () => {
     const TestComponent = () => {
       const [renderComponent, handleData] = useRenderState<number, Error>();
 
@@ -499,10 +503,12 @@ describe("useRenderState with render options object", () => {
       }, [handleData]);
 
       return renderComponent({
-        onIdle: () => <div data-testid="status">render idle</div>,
-        onLoading: () => <div data-testid="status">render loading</div>,
-        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderIdle: () => <div data-testid="status">render idle</div>,
+        renderLoading: () => <div data-testid="status">render loading</div>,
+        renderSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       });
     };
 
@@ -518,7 +524,7 @@ describe("useRenderState with render options object", () => {
     unmount();
   });
 
-  it("should render error state with onError option", async () => {
+  it("should render error state with renderError option", async () => {
     const TestComponent = () => {
       const [renderComponent, handleData] = useRenderState<number, Error>();
 
@@ -529,10 +535,12 @@ describe("useRenderState with render options object", () => {
       }, [handleData]);
 
       return renderComponent({
-        onIdle: () => <div data-testid="status">render idle</div>,
-        onLoading: () => <div data-testid="status">render loading</div>,
-        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderIdle: () => <div data-testid="status">render idle</div>,
+        renderLoading: () => <div data-testid="status">render loading</div>,
+        renderSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       });
     };
 
@@ -554,9 +562,9 @@ describe("useRenderState with render options object", () => {
       const [renderComponent, handleData, resetData] = useRenderState<number, Error>();
 
       const renderOptions = {
-        onIdle: () => <div data-testid="status">render idle</div>,
-        onLoading: () => <div data-testid="status">render loading</div>,
-        onSuccess: (data: number) => (
+        renderIdle: () => <div data-testid="status">render idle</div>,
+        renderLoading: () => <div data-testid="status">render loading</div>,
+        renderSuccess: (data: number) => (
           <div>
             <div data-testid="status">render success: {data}</div>
             <button type="button" data-testid="reset-btn" onClick={() => resetData()}>
@@ -564,7 +572,9 @@ describe("useRenderState with render options object", () => {
             </button>
           </div>
         ),
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       };
 
       return (
@@ -644,8 +654,10 @@ describe("useRenderState with render options object", () => {
       }, [handleData]);
 
       return renderComponent({
-        onSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
-        onError: (error: unknown) => <div data-testid="status">render error {String(error)}</div>,
+        renderSuccess: (data: number) => <div data-testid="status">render success: {data}</div>,
+        renderError: (error: unknown) => (
+          <div data-testid="status">render error {String(error)}</div>
+        ),
       });
     };
 
@@ -653,7 +665,7 @@ describe("useRenderState with render options object", () => {
       return render(<TestComponent />);
     });
 
-    // Should render nothing for loading state since onLoading is not provided
+    // Should render nothing for loading state since renderLoading is not provided
     expect(screen.queryByTestId("status")).toBeNull();
 
     await act(async () => {

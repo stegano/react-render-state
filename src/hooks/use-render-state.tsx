@@ -7,6 +7,7 @@ import {
   RenderSuccess,
   RenderLoading,
   RenderError,
+  RenderOptions,
 } from "./use-render-state.interface";
 
 /**
@@ -119,18 +120,11 @@ const useRenderState = <Data, Error>(initialData?: Data, initialError?: Error) =
           : (args[2] as RenderSuccess<Data, Error>);
         renderError = isSingleArg ? undefined : (args[3] as RenderError<Data, Error>);
       } else {
-        const renderOptions = args[0] as
-          | {
-              onIdle?: RenderIdle<Data, Error>;
-              onLoading?: RenderLoading<Data, Error>;
-              onSuccess?: RenderSuccess<Data, Error>;
-              onError?: RenderError<Data, Error>;
-            }
-          | undefined;
-        renderIdle = renderOptions?.onIdle;
-        renderLoading = renderOptions?.onLoading;
-        renderSuccess = renderOptions?.onSuccess;
-        renderError = renderOptions?.onError;
+        const renderOptions = args[0] as RenderOptions<Data, Error> | undefined;
+        renderIdle = renderOptions?.renderIdle;
+        renderLoading = renderOptions?.renderLoading;
+        renderSuccess = renderOptions?.renderSuccess;
+        renderError = renderOptions?.renderError;
       }
 
       switch (status) {
