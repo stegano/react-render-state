@@ -1,6 +1,7 @@
 # React Render State
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-) <!-- ALL-CONTRIBUTORS-BADGE:END --> ![NPM License](https://img.shields.io/npm/l/react-render-state) ![NPM Downloads](https://img.shields.io/npm/dw/react-render-state)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END --> ![NPM License](https://img.shields.io/npm/l/react-render-state) ![NPM Downloads](https://img.shields.io/npm/dw/react-render-state)
 
 React Render State: This hook allows you to declaratively define components that will be rendered based on the data processing state.
 
@@ -177,6 +178,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/stegano"><img src="https://avatars.githubusercontent.com/u/11916476?v=4?s=100" width="100px;" alt="Yongwoo Jung"/><br /><sub><b>Yongwoo Jung</b></sub></a><br /><a href="https://github.com/stegano/react-render-state/commits?author=stegano" title="Code">💻</a> <a href="#ideas-stegano" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/yoonyounghoon"><img src="https://avatars.githubusercontent.com/u/45310468?v=4?s=100" width="100px;" alt="윤영훈"/><br /><sub><b>윤영훈</b></sub></a><br /><a href="https://github.com/stegano/react-render-state/commits?author=yoonyounghoon" title="Code">💻</a> <a href="#ideas-yoonyounghoon" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
