@@ -1,7 +1,5 @@
 # React Render State
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END --> ![NPM License](https://img.shields.io/npm/l/react-render-state) ![NPM Downloads](https://img.shields.io/npm/dw/react-render-state)
+![NPM License](https://img.shields.io/npm/l/react-render-state) ![NPM Downloads](https://img.shields.io/npm/dw/react-render-state) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section --> [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END --> 
 
 React Render State: This hook allows you to declaratively define components that will be rendered based on the data processing state.
 
@@ -36,12 +34,12 @@ export const App = () => {
     });
   }, [handleData]);
 
-  return render(
-    () => <p>Idle</p>,                              // → renderIdle
-    () => <p>Loading..</p>,                         // → renderLoading
-    (data) => <div>Success({data})</div>,           // → renderSuccess
-    (error) => <p>Error. :(, ({error.message})</p>  // → renderError
-  );
+  return render({
+    renderIdle: () => <p>Idle</p>,                             
+    renderLoading: () => <p>Loading..</p>,                        
+    renderSuccess: (data) => <div>Success({data})</div>,          
+    renderError: (error) => <p>Error. :(, ({error.message})</p> 
+  });
 };
 ```
 Demo: https://stackblitz.com/edit/stackblitz-starters-uv8yjs
@@ -133,12 +131,12 @@ export const ComponentA = () => {
     });
   }, [handleData]);
 
-  return render(
-    () => <p>Idle</p>,
-    () => <p>Loading..</p>,
-    (data) => <div>Success({data})</div>,
-    (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
-  );
+  return render({
+    renderIdle: () => <p>Idle</p>,
+    renderLoading: () => <p>Loading..</p>,
+    renderSuccess: (data) => <div>Success({data})</div>,
+    renderError: (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
+  });
 };
 
 export const ComponentB = () => {
@@ -148,12 +146,12 @@ export const ComponentB = () => {
     sharingKey
   );
 
-  return render(
-    () => <p>Idle</p>,
-    () => <p>Loading..</p>,
-    (data) => <div>Success({data})</div>,
-    (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
-  );
+  return render({
+    renderIdle: () => <p>Idle</p>,
+    renderLoading: () => <p>Loading..</p>,
+    renderSuccess: (data) => <div>Success({data})</div>,
+    renderError: (error) => <p>Error, Oops something went wrong.. :(, ({error.message})</p>
+  });
 };
 
 export const App = () => {
